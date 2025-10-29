@@ -72,6 +72,27 @@ def load_state():
         try:
             with open(STATE_FILE, 'r') as f:
                 state = json.load(f)
+                
+                # Migrate old format to new format if needed
+                if state.get('current_assignments') and 'level' in state.get('current_assignments', {}):
+                    # Old format detected, convert to new format
+                    old_assignment = state['current_assignments']
+                    level = old_assignment.get('level', 'Level 1')
+                    state['current_assignments'] = {
+                        'Level 1': old_assignment if level == 'Level 1' else None,
+                        'Level 2': old_assignment if level == 'Level 2' else None
+                    }
+                    # Remove the 'level' key from the assignment
+                    if state['current_assignments']['Level 1']:
+                        del state['current_assignments']['Level 1']['level']
+                    if state['current_assignments']['Level 2']:
+                        del state['current_assignments']['Level 2']['level']
+                
+                # Migrate match_number if it's a single number
+                if isinstance(state.get('match_number'), int):
+                    old_match = state['match_number']
+                    state['match_number'] = {'Level 1': old_match, 'Level 2': 1}
+                
                 return state
         except:
             return None
@@ -98,8 +119,8 @@ if 'initialized' not in st.session_state:
     if saved_state:
         st.session_state.level1_players = saved_state.get('level1_players', DEFAULT_LEVEL1_PLAYERS.copy())
         st.session_state.level2_players = saved_state.get('level2_players', DEFAULT_LEVEL2_PLAYERS.copy())
-        st.session_state.current_assignments = saved_state.get('current_assignments', None)
-        st.session_state.match_number = saved_state.get('match_number', 1)
+        st.session_state.current_assignments = saved_state.get('current_assignments', {'Level 1': None, 'Level 2': None})
+        st.session_state.match_number = saved_state.get('match_number', {'Level 1': 1, 'Level 2': 1})
         
         # Convert pairing history back to proper format
         pairing_hist = saved_state.get('pairing_history', {'Level 1': {}, 'Level 2': {}})
@@ -111,8 +132,8 @@ if 'initialized' not in st.session_state:
         # Use defaults
         st.session_state.level1_players = DEFAULT_LEVEL1_PLAYERS.copy()
         st.session_state.level2_players = DEFAULT_LEVEL2_PLAYERS.copy()
-        st.session_state.current_assignments = None
-        st.session_state.match_number = 1
+        st.session_state.current_assignments = {'Level 1': None, 'Level 2': None}
+        st.session_state.match_number = {'Level 1': 1, 'Level 2': 1}
         st.session_state.pairing_history = {'Level 1': {}, 'Level 2': {}}
     
     st.session_state.initialized = True
@@ -280,13 +301,13 @@ with st.sidebar:
         if level_tab == "Level 1":
             st.session_state.level1_players = DEFAULT_LEVEL1_PLAYERS.copy()
             st.session_state.pairing_history['Level 1'] = {}
-            st.session_state.current_assignments = None
-            st.session_state.match_number = 1
+            st.session_state.current_assignments['Level 1'] = None
+            st.session_state.match_number['Level 1'] = 1
         else:
             st.session_state.level2_players = DEFAULT_LEVEL2_PLAYERS.copy()
             st.session_state.pairing_history['Level 2'] = {}
-            st.session_state.current_assignments = None
-            st.session_state.match_number = 1
+            st.session_state.current_assignments['Level 2'] = None
+            st.session_state.match_number['Level 2'] = 1
         save_state()
         st.rerun()
 
@@ -313,24 +334,24 @@ with tab1:
         if st.button("🔀 Shuffle & Assign Courts", key="shuffle_level1", use_container_width=True):
             if len(st.session_state.level1_players) >= 4:
                 courts, sitting_out = shuffle_and_assign(st.session_state.level1_players, 'Level 1')
-                st.session_state.current_assignments = {
-                    'level': 'Level 1',
+                st.session_state.current_assignments['Level 1'] = {
                     'courts': courts,
                     'sitting_out': sitting_out,
-                    'match_number': st.session_state.match_number
+                    'match_number': st.session_state.match_number['Level 1']
                 }
-                st.session_state.match_number += 1
+                st.session_state.match_number['Level 1'] += 1
                 save_state()
                 st.rerun()
             else:
                 st.error("Need at least 4 players to start a game!")
     
     # Display current assignments
-    if st.session_state.current_assignments and st.session_state.current_assignments['level'] == 'Level 1':
-        st.markdown(f"### Match #{st.session_state.current_assignments['match_number']}")
+    if st.session_state.current_assignments['Level 1']:
+        assignment = st.session_state.current_assignments['Level 1']
+        st.markdown(f"### Match #{assignment['match_number']}")
         
-        courts = st.session_state.current_assignments['courts']
-        sitting_out = st.session_state.current_assignments['sitting_out']
+        courts = assignment['courts']
+        sitting_out = assignment['sitting_out']
         
         # Display courts in columns
         if courts:
@@ -366,24 +387,24 @@ with tab2:
         if st.button("🔀 Shuffle & Assign Courts", key="shuffle_level2", use_container_width=True):
             if len(st.session_state.level2_players) >= 4:
                 courts, sitting_out = shuffle_and_assign(st.session_state.level2_players, 'Level 2')
-                st.session_state.current_assignments = {
-                    'level': 'Level 2',
+                st.session_state.current_assignments['Level 2'] = {
                     'courts': courts,
                     'sitting_out': sitting_out,
-                    'match_number': st.session_state.match_number
+                    'match_number': st.session_state.match_number['Level 2']
                 }
-                st.session_state.match_number += 1
+                st.session_state.match_number['Level 2'] += 1
                 save_state()
                 st.rerun()
             else:
                 st.error("Need at least 4 players to start a game!")
     
     # Display current assignments
-    if st.session_state.current_assignments and st.session_state.current_assignments['level'] == 'Level 2':
-        st.markdown(f"### Match #{st.session_state.current_assignments['match_number']}")
+    if st.session_state.current_assignments['Level 2']:
+        assignment = st.session_state.current_assignments['Level 2']
+        st.markdown(f"### Match #{assignment['match_number']}")
         
-        courts = st.session_state.current_assignments['courts']
-        sitting_out = st.session_state.current_assignments['sitting_out']
+        courts = assignment['courts']
+        sitting_out = assignment['sitting_out']
         
         # Display courts in columns
         if courts:
