@@ -41,6 +41,28 @@ st.markdown("""
         color: #1f77b4;
         margin: 20px 0 10px 0;
     }
+    /* Shuffle button - light pastel green */
+    .stButton button[kind="primary"] {
+        background-color: #c8e6c9 !important;
+        color: #2e7d32 !important;
+        border: 1px solid #81c784 !important;
+    }
+    .stButton button[kind="primary"]:hover {
+        background-color: #a5d6a7 !important;
+        color: #1b5e20 !important;
+        border: 1px solid #66bb6a !important;
+    }
+    /* Reset button - pastel red */
+    .stButton button[kind="secondary"] {
+        background-color: #ffcdd2 !important;
+        color: #c62828 !important;
+        border: 1px solid #e57373 !important;
+    }
+    .stButton button[kind="secondary"]:hover {
+        background-color: #ef9a9a !important;
+        color: #b71c1c !important;
+        border: 1px solid #ef5350 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -249,6 +271,16 @@ st.markdown("---")
 
 # Sidebar for player management
 with st.sidebar:
+    # Player Count at the top with smaller font
+    st.markdown("""
+        <div style='text-align: center; padding: 10px 0;'>
+            <div style='font-size: 14px; color: #666; margin-bottom: 5px;'>📊 Player Count</div>
+            <div style='font-size: 16px;'><strong>Level 1:</strong> <span style='font-size: 20px;'>{}</span></div>
+            <div style='font-size: 16px;'><strong>Level 2:</strong> <span style='font-size: 20px;'>{}</span></div>
+        </div>
+    """.format(len(st.session_state.level1_players), len(st.session_state.level2_players)), unsafe_allow_html=True)
+    
+    st.markdown("---")
     st.header("⚙️ Player Management")
     
     level_tab = st.radio("Select Level", ["Level 1", "Level 2"], horizontal=True)
@@ -258,7 +290,7 @@ with st.sidebar:
     # Use counter in key to force input reset
     new_player = st.text_input("Enter player name", key=f"new_player_input_{st.session_state.input_counter}")
     
-    if st.button("➕ Add Player", use_container_width=True):
+    if st.button("➕ Add Player", use_container_width=True, type="primary"):
         if new_player:
             if level_tab == "Level 1":
                 if new_player not in st.session_state.level1_players:
@@ -312,27 +344,6 @@ with st.sidebar:
             st.session_state.level2_players = []
         save_state()
         st.rerun()
-    
-    st.markdown("---")
-    st.markdown("### 📊 Player Count")
-    st.metric("Level 1 Players", len(st.session_state.level1_players))
-    st.metric("Level 2 Players", len(st.session_state.level2_players))
-    
-    st.markdown("---")
-    st.markdown("### 🔄 Reset to Default")
-    if st.button("♻️ Reset to Default", key="reset_default", use_container_width=True, type="secondary"):
-        if level_tab == "Level 1":
-            st.session_state.level1_players = DEFAULT_LEVEL1_PLAYERS.copy()
-            st.session_state.pairing_history['Level 1'] = {}
-            st.session_state.current_assignments['Level 1'] = None
-            st.session_state.match_number['Level 1'] = 1
-        else:
-            st.session_state.level2_players = DEFAULT_LEVEL2_PLAYERS.copy()
-            st.session_state.pairing_history['Level 2'] = {}
-            st.session_state.current_assignments['Level 2'] = None
-            st.session_state.match_number['Level 2'] = 1
-        save_state()
-        st.rerun()
 
 # Main content area
 tab1, tab2 = st.tabs(["🏸 Level 1", "🏸 Level 2"])
@@ -351,10 +362,10 @@ with tab1:
     
     st.markdown("---")
     
-    # Shuffle button
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        if st.button("🔀 Shuffle & Assign Courts", key="shuffle_level1", use_container_width=True):
+    # Shuffle and Reset buttons
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔀 Shuffle & Assign Courts", key="shuffle_level1", use_container_width=True, type="primary"):
             if len(st.session_state.level1_players) >= 4:
                 courts, sitting_out = shuffle_and_assign(st.session_state.level1_players, 'Level 1')
                 st.session_state.current_assignments['Level 1'] = {
@@ -367,6 +378,15 @@ with tab1:
                 st.rerun()
             else:
                 st.error("Need at least 4 players to start a game!")
+    
+    with col2:
+        if st.button("♻️ Reset to Default - Level 1", key="reset_level1", use_container_width=True, type="secondary"):
+            st.session_state.level1_players = DEFAULT_LEVEL1_PLAYERS.copy()
+            st.session_state.pairing_history['Level 1'] = {}
+            st.session_state.current_assignments['Level 1'] = None
+            st.session_state.match_number['Level 1'] = 1
+            save_state()
+            st.rerun()
     
     # Display current assignments
     if st.session_state.current_assignments['Level 1']:
@@ -404,10 +424,10 @@ with tab2:
     
     st.markdown("---")
     
-    # Shuffle button
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        if st.button("🔀 Shuffle & Assign Courts", key="shuffle_level2", use_container_width=True):
+    # Shuffle and Reset buttons
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔀 Shuffle & Assign Courts", key="shuffle_level2", use_container_width=True, type="primary"):
             if len(st.session_state.level2_players) >= 4:
                 courts, sitting_out = shuffle_and_assign(st.session_state.level2_players, 'Level 2')
                 st.session_state.current_assignments['Level 2'] = {
@@ -420,6 +440,15 @@ with tab2:
                 st.rerun()
             else:
                 st.error("Need at least 4 players to start a game!")
+    
+    with col2:
+        if st.button("♻️ Reset to Default - Level 2", key="reset_level2", use_container_width=True, type="secondary"):
+            st.session_state.level2_players = DEFAULT_LEVEL2_PLAYERS.copy()
+            st.session_state.pairing_history['Level 2'] = {}
+            st.session_state.current_assignments['Level 2'] = None
+            st.session_state.match_number['Level 2'] = 1
+            save_state()
+            st.rerun()
     
     # Display current assignments
     if st.session_state.current_assignments['Level 2']:
