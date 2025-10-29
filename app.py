@@ -138,6 +138,18 @@ if 'initialized' not in st.session_state:
     
     st.session_state.initialized = True
 
+# Ensure current_assignments is always a dictionary (safety check)
+if not isinstance(st.session_state.current_assignments, dict):
+    st.session_state.current_assignments = {'Level 1': None, 'Level 2': None}
+
+# Ensure match_number is always a dictionary (safety check)
+if not isinstance(st.session_state.match_number, dict):
+    st.session_state.match_number = {'Level 1': 1, 'Level 2': 1}
+
+# Initialize input counter for clearing text input
+if 'input_counter' not in st.session_state:
+    st.session_state.input_counter = 0
+
 # Helper functions
 def get_pairings_from_court(court_players):
     """Get all unique pairings from a court (all players who played together)"""
@@ -242,13 +254,17 @@ with st.sidebar:
     level_tab = st.radio("Select Level", ["Level 1", "Level 2"], horizontal=True)
     
     st.markdown("### Add Player")
-    new_player = st.text_input("Enter player name", key="new_player_input")
+    
+    # Use counter in key to force input reset
+    new_player = st.text_input("Enter player name", key=f"new_player_input_{st.session_state.input_counter}")
     
     if st.button("➕ Add Player", use_container_width=True):
         if new_player:
             if level_tab == "Level 1":
                 if new_player not in st.session_state.level1_players:
                     st.session_state.level1_players.append(new_player)
+                    # Increment counter to create a new input field
+                    st.session_state.input_counter += 1
                     save_state()
                     st.rerun()
                 else:
@@ -256,6 +272,8 @@ with st.sidebar:
             else:
                 if new_player not in st.session_state.level2_players:
                     st.session_state.level2_players.append(new_player)
+                    # Increment counter to create a new input field
+                    st.session_state.input_counter += 1
                     save_state()
                     st.rerun()
                 else:
@@ -267,15 +285,20 @@ with st.sidebar:
     players_list = st.session_state.level1_players if level_tab == "Level 1" else st.session_state.level2_players
     
     if players_list:
-        player_to_remove = st.selectbox("Select player to remove", players_list, key="remove_player_select")
+        # Add empty option as default
+        options = ["-- Select a player --"] + players_list
+        player_to_remove = st.selectbox("Select player to remove", options, key="remove_player_select")
         
         if st.button("🗑️ Remove Player", use_container_width=True):
-            if level_tab == "Level 1":
-                st.session_state.level1_players.remove(player_to_remove)
+            if player_to_remove != "-- Select a player --":
+                if level_tab == "Level 1":
+                    st.session_state.level1_players.remove(player_to_remove)
+                else:
+                    st.session_state.level2_players.remove(player_to_remove)
+                save_state()
+                st.rerun()
             else:
-                st.session_state.level2_players.remove(player_to_remove)
-            save_state()
-            st.rerun()
+                st.warning("Please select a player to remove!")
     else:
         st.info("No players to remove")
     
