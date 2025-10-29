@@ -344,6 +344,22 @@ with st.sidebar:
             st.session_state.level2_players = []
         save_state()
         st.rerun()
+    
+    st.markdown("---")
+    st.markdown("### 🔄 Reset to Default")
+    if st.button("♻️ Reset to Default", key="reset_default", use_container_width=True, type="secondary"):
+        if level_tab == "Level 1":
+            st.session_state.level1_players = DEFAULT_LEVEL1_PLAYERS.copy()
+            st.session_state.pairing_history['Level 1'] = {}
+            st.session_state.current_assignments['Level 1'] = None
+            st.session_state.match_number['Level 1'] = 1
+        else:
+            st.session_state.level2_players = DEFAULT_LEVEL2_PLAYERS.copy()
+            st.session_state.pairing_history['Level 2'] = {}
+            st.session_state.current_assignments['Level 2'] = None
+            st.session_state.match_number['Level 2'] = 1
+        save_state()
+        st.rerun()
 
 # Main content area
 tab1, tab2 = st.tabs(["🏸 Level 1", "🏸 Level 2"])
@@ -362,7 +378,7 @@ with tab1:
     
     st.markdown("---")
     
-    # Shuffle and Reset buttons
+    # Shuffle and Clear buttons
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🔀 Shuffle & Assign Courts", key="shuffle_level1", use_container_width=True, type="primary"):
@@ -380,9 +396,7 @@ with tab1:
                 st.error("Need at least 4 players to start a game!")
     
     with col2:
-        if st.button("♻️ Reset to Default - Level 1", key="reset_level1", use_container_width=True, type="secondary"):
-            st.session_state.level1_players = DEFAULT_LEVEL1_PLAYERS.copy()
-            st.session_state.pairing_history['Level 1'] = {}
+        if st.button("🧹 Clear", key="clear_level1", use_container_width=True, type="secondary"):
             st.session_state.current_assignments['Level 1'] = None
             st.session_state.match_number['Level 1'] = 1
             save_state()
@@ -424,7 +438,7 @@ with tab2:
     
     st.markdown("---")
     
-    # Shuffle and Reset buttons
+    # Shuffle and Clear buttons
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🔀 Shuffle & Assign Courts", key="shuffle_level2", use_container_width=True, type="primary"):
@@ -442,9 +456,7 @@ with tab2:
                 st.error("Need at least 4 players to start a game!")
     
     with col2:
-        if st.button("♻️ Reset to Default - Level 2", key="reset_level2", use_container_width=True, type="secondary"):
-            st.session_state.level2_players = DEFAULT_LEVEL2_PLAYERS.copy()
-            st.session_state.pairing_history['Level 2'] = {}
+        if st.button("🧹 Clear", key="clear_level2", use_container_width=True, type="secondary"):
             st.session_state.current_assignments['Level 2'] = None
             st.session_state.match_number['Level 2'] = 1
             save_state()
